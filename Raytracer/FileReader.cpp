@@ -1,16 +1,23 @@
 #include "pch.h"
 #include "FileReader.h"
 #include <iostream>
-#include <string>
+#include <fstream>
 #include "Sphere.h"
 #include "Light.h"
 
-using namespace std;
-
 // Takes in the name of the file and returns a pointer carrying all the parameters
-Parameters* FileReader::ReadFile(string filename)
+std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 {
-	cout << "File successfully retrieved";
+	std::ifstream file(filename);
+	std::unique_ptr<Parameters> param;
 
-	throw "Not Implemented";
+	if (file.is_open())
+	{
+		file.close();
+		return param;
+	}
+	else
+	{
+		return NULL;
+	}
 }

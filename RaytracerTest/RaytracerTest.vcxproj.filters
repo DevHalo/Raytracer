@@ -18,6 +18,12 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="IOTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="catch.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -26,5 +32,22 @@
     <ClCompile Include="RaytracerTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="IOTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="input\testAmbient.txt" />
+    <Content Include="input\testSpecular.txt" />
+    <Content Include="input\testBehind.txt" />
+    <Content Include="input\testDiffuse.txt" />
+    <Content Include="input\testIllum.txt" />
+    <Content Include="input\testImgPlane.txt" />
+    <Content Include="input\testIntersection.txt" />
+    <Content Include="input\testParsing.txt" />
+    <Content Include="input\testReflection.txt" />
+    <Content Include="input\testSample.txt" />
+    <Content Include="input\testShadow.txt" />
+    <Content Include="input\testBackground.txt" />
   </ItemGroup>
 </Project>

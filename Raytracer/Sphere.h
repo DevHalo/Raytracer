@@ -1,7 +1,6 @@
 #pragma once
-#include "Sphere.h"
 #include "include/glm/vec3.hpp"
-#include "string"
+#include <string>
 #include "Colour.h"
 
 // Container for a sphere object in the scene

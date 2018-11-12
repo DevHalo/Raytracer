@@ -28,9 +28,7 @@ Global
 		{35150B1D-B19D-475F-A21D-F5DA35132540}.Debug|x86.ActiveCfg = Debug|Win32
 		{35150B1D-B19D-475F-A21D-F5DA35132540}.Debug|x86.Build.0 = Debug|Win32
 		{35150B1D-B19D-475F-A21D-F5DA35132540}.Release|x64.ActiveCfg = Release|x64
-		{35150B1D-B19D-475F-A21D-F5DA35132540}.Release|x64.Build.0 = Release|x64
 		{35150B1D-B19D-475F-A21D-F5DA35132540}.Release|x86.ActiveCfg = Release|Win32
-		{35150B1D-B19D-475F-A21D-F5DA35132540}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

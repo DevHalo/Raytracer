@@ -8,14 +8,13 @@ struct Parameters
 	float near, left, right, bottom, top;
 	int resX, resY;
 	int numSpheres, numLights;
-
-	Parameters(float _near, float _left, float _right, float _bottom, float _top, int _resX, int _resY, int _numSpheres, int _numLights, Sphere _spheres[], Light _lights[]) :
-		near(near), left(_left), right(_right), bottom(_bottom), top(_top), resX(_resX), resY(_resY), numSpheres(_numSpheres) {};
+	std::unique_ptr<Sphere> (*spheres)[];
+	std::unique_ptr<Light> (*lights)[];
 };
 
 class FileReader
 {
 public:
-	Parameters * ReadFile(std::string filename);
+	std::unique_ptr<Parameters> ReadFile(std::string filename);
 };
 

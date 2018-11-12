@@ -1458,9 +1458,6 @@
     <ClInclude Include="include\glm\vector_relational.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\catch.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Sphere.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1485,12 +1482,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="include\glm\detail\glm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test\IOTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test\UnitTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FileReader.cpp">
@@ -2287,19 +2278,5 @@
     <None Include="include\glm\gtx\wrap.inl">
       <Filter>Header Files</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="test\input\testAmbient.txt" />
-    <Text Include="test\input\testBackground.txt" />
-    <Text Include="test\input\testBehind.txt" />
-    <Text Include="test\input\testDiffuse.txt" />
-    <Text Include="test\input\testIllum.txt" />
-    <Text Include="test\input\testImgPlane.txt" />
-    <Text Include="test\input\testIntersection.txt" />
-    <Text Include="test\input\testParsing.txt" />
-    <Text Include="test\input\testReflection.txt" />
-    <Text Include="test\input\testSample.txt" />
-    <Text Include="test\input\testShadow.txt" />
-    <Text Include="test\input\testSpecular.txt" />
   </ItemGroup>
 </Project>
