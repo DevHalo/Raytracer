@@ -4,14 +4,21 @@
 
 // Unit test for verifying input and output of the raytracer
 
-TEST_CASE("asd")
+TEST_CASE("FileReader Test")
 {
 	FileReader reader;
 
 	
+	// If a file is not found, FileReader returns null pointer
 	SECTION("File not found")
 	{
-		WARN("FileReader Test Suite");
 		CHECK(reader.ReadFile(" ") == nullptr);
-	};
+	}
+
+	// If a file is found, FileReader will return a valid pointer
+	// containing the data
+	SECTION("Valid File")
+	{
+		CHECK(reader.ReadFile("input/testAmbient.txt") != nullptr);
+	}
 }

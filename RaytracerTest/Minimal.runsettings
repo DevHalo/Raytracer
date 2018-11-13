@@ -3,7 +3,7 @@
 
   <Catch2Adapter>
     <FilenameFilter>.*Test</FilenameFilter>
-    <Logging>Verbose</Logging>
+    <Logging>Debug</Logging>
   </Catch2Adapter>
 
 </RunSettings>

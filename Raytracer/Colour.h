@@ -1,6 +1,6 @@
 #pragma once
 
-// Struct for holding an RGB value
+// Container for holding an RGB value
 struct Colour
 {
 	float r, g, b;
