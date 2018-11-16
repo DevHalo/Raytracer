@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "FileReader.h"
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 // Takes in the name of the file and returns a pointer carrying all the parameters
 std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
@@ -11,7 +11,11 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 	
 	// Open file and return null pointer if it doesn't open
 	std::ifstream file(filename);
-	if (!file.is_open()) { return nullptr; }
+
+	char str[256];
+	if (!file.is_open()) { 
+		return nullptr; 
+	}
 
 	// Stores the parameters returned to the caller
 	std::unique_ptr<Parameters> param = std::make_unique<Parameters>();
@@ -107,8 +111,8 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 			{
 				switch (numVariable)
 				{
-					case 1: param->resY = std::make_shared<int>((int)*val); command = ""; break;
-					case 2: param->resX = std::make_shared<int>((int)*val); break;
+					case 1: param->resY = std::make_shared<int>(static_cast<int>(*val)); command = ""; break;
+					case 2: param->resX = std::make_shared<int>(static_cast<int>(*val)); break;
 				}
 
 				numVariable--;
@@ -141,7 +145,7 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 				switch (numVariable)
 				{
 					case 1:
-						tempSphere->n = (int)*val;
+						tempSphere->n = static_cast<int>(*val);
 						param->spheres.push_back(tempSphere);
 						command = "";
 						break;
@@ -207,7 +211,7 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 }
 
 // Method to convert a float into a shared pointer
-std::shared_ptr<float> FileReader::ConvertToFloat(std::string strVal)
+std::shared_ptr<float> FileReader::ConvertToFloat(std::string strVal) const
 {
 	// If the supplied string is not a float, return a null pointer instead
 	try { return std::make_shared<float>(std::stof(strVal)); }

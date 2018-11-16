@@ -20,5 +20,5 @@ class FileReader
 public:
 	std::unique_ptr<Parameters> ReadFile(std::string filename);
 private:
-	std::shared_ptr<float> ConvertToFloat(std::string strVal);
+	std::shared_ptr<float> ConvertToFloat(std::string strVal) const;
 };
