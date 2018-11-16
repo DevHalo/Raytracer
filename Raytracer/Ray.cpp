@@ -1,5 +1,11 @@
 #include "pch.h"
 #include "Ray.h"
+#include "glm/vec3.hpp"
+
+glm::vec3 a;
+glm::vec3 c;
+
+// r(t) = a + ct, t = {0, +inf}
 
 int depth;
 
