@@ -12,7 +12,7 @@ void ppm::save_imageP6(int Width, int Height, char* fname, unsigned char* pixels
 	const int maxVal = 255;
 
 	printf("Saving image %s: %d x %d\n", fname, Width, Height);
-	fp = fopen(fname, "wb");
+	fopen_s(&fp, fname, "wb");
 	if (!fp) {
 		printf("Unable to open file '%s'\n", fname);
 		return;
@@ -38,7 +38,7 @@ void ppm::save_imageP3(int Width, int Height, char* fname, unsigned char* pixels
 	const int maxVal = 255;
 
 	printf("Saving image %s: %d x %d\n", fname, Width, Height);
-	fp = fopen(fname, "w");
+	fopen_s(&fp, fname, "w");
 	if (!fp) {
 		printf("Unable to open file '%s'\n", fname);
 		return;
