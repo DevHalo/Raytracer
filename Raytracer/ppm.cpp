@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "ppm.h"
-#include <stdio.h>
+#include <cstdio>
 
 // Output in P6 format, a binary file containing:
 // P6
 // ncolumns nrows
 // Max colour value
 // colours in binary format thus unreadable
-void ppm::save_imageP6(int Width, int Height, char* fname, unsigned char* pixels) {
+void ppm::save_imageP6(int Width, int Height, const char* fname, unsigned char* pixels) {
 	FILE *fp;
 	const int maxVal = 255;
 
@@ -33,7 +33,7 @@ void ppm::save_imageP6(int Width, int Height, char* fname, unsigned char* pixels
 // ncolumns nrows
 // Max colour value (for us, and usually 255)
 // r1 g1 b1 r2 g2 b2 .....
-void ppm::save_imageP3(int Width, int Height, char* fname, unsigned char* pixels) {
+void ppm::save_imageP3(int Width, int Height, const char* fname, unsigned char* pixels) {
 	FILE *fp;
 	const int maxVal = 255;
 
