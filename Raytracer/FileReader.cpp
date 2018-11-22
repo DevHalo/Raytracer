@@ -12,7 +12,6 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 	// Open file and return null pointer if it doesn't open
 	std::ifstream file(filename);
 
-	char str[256];
 	if (!file.is_open()) { 
 		return nullptr; 
 	}
@@ -146,6 +145,7 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 				{
 					case 1:
 						tempSphere->n = static_cast<int>(*val);
+						tempSphere->pos.w = 1.0f;
 						param->spheres.push_back(tempSphere);
 						command = "";
 						break;
@@ -173,6 +173,7 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 				{
 					case 1:
 						tempLight->intensity.z = *val;
+						tempLight->pos.x = 1.0f;
 						param->lights.push_back(tempLight);
 						command = "";
 						break;
