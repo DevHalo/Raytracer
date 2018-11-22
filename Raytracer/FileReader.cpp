@@ -33,6 +33,10 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 		// If the current word is alphabetic
 		if (val == nullptr)
 		{
+			// If the word is greater than 20 characters, its not a command and is not valid
+			// for naming an object if that is the current parameter being processed 
+			if (buffer.length() > 20) { continue; }
+
 			// If we were already processing a command before, reset everything
 			if (!command.empty())
 			{
