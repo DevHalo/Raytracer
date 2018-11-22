@@ -57,7 +57,7 @@ The sphere has the following parameters (In order):
 * The ambient reflection constant ```Ka```
 * The diffuse reflection constant ```Kd```
 * The specular reflection constant ```Ks```
-* The refraction constant ```Kr```
+* The reflection constant ```Kr```
 * The specular exponent ```n```
 
 The light has the following parameters (In order):
