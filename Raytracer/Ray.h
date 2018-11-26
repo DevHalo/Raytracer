@@ -28,10 +28,10 @@ public:
 	Ray(glm::vec4 origin, glm::vec4 direction, int _depth);
 	Ray(std::unique_ptr<Parameters>& params, float width, float height, int col, int row);
 	std::unique_ptr<Quadratic> ShortestCollisionPoint(std::vector<std::shared_ptr<Sphere>> spheres);
+	bool Collides(std::vector<std::shared_ptr<Sphere>> spheres);
 	glm::vec4 Origin() const;
 	glm::vec4 Direction() const;
 	void SetDirection(glm::vec4 newDirection);
 private:
-	std::unique_ptr<Quadratic> GetCollisionPoint(std::shared_ptr<Sphere> sphere);
+	std::unique_ptr<Quadratic> GetCollisionPoint(std::shared_ptr<Sphere> sphere, bool hitOnly);
 };
-

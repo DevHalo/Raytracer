@@ -153,7 +153,8 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 				{
 					case 1:
 						tempSphere->n = static_cast<int>(*val);
-						tempSphere->pos.w = 1.0f;
+						tempSphere->pos.w = 1.f;
+						tempSphere->scl.w = 1.f;
 						param->spheres.push_back(tempSphere);
 						command = "";
 						break;

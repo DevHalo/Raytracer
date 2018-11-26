@@ -3,8 +3,8 @@
 #include "FileReader.h"
 #include "glm/glm.hpp"
 
-glm::vec4 o = { 0.0f, 0.0f, 0.0f, 1.0f };	// Ray starting point, or eye
-glm::vec4 d = { 0.0f, 0.0f, 0.0f, 0.0f };	// Direction of ray, intersects with near plane
+glm::vec4 o = { 0.f, 0.f, 0.f, 1.f };	// Ray starting point, or eye
+glm::vec4 d = { 0.f, 0.f, 0.f, 0.f };	// Direction of ray, intersects with near plane
 float t = FLT_MAX;							// Scalar for direction
 
 // r(t) = o + dt, t = {0, +inf}
@@ -26,6 +26,8 @@ void Ray::SetDirection(glm::vec4 newDirection) { d = newDirection; }
 // Clamps a colour uniformly
 void Ray::ClampColour(glm::vec3 colour)
 {
+	if (colour.r <= 1.f && colour.g <= 1.f && colour.b <= 1.f) { return; }
+
 	float maxColour = colour.r;
 
 	// Determine largest colour value from r,g,b
@@ -39,13 +41,9 @@ void Ray::ClampColour(glm::vec3 colour)
 // Casts a ray with supplied origin and direction
 Ray::Ray(glm::vec4 origin, glm::vec4 direction, int _depth)
 {
-	o.x = origin.x;
-	o.y = origin.y;
-	o.z = origin.z;
-
-	d.x = direction.x;
-	d.y = direction.y;
-	d.z = direction.z;
+	// Starting at hit point t = 0.0001 to prevent numerical errors
+	o = origin + direction * 0.0001f;
+	d = direction;
 
 	depth = _depth;
 }
@@ -65,63 +63,70 @@ Ray::Ray(std::unique_ptr<Parameters>& params, float width, float height, int col
 // Returns a struct containing all components of the quadratic as well as
 // the intercepts and whether or not to flip the normal (If the collision point is inside an object)
 // Returns nullptr if no collision is found
-std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere)
+// hitOnly when true parameter will skip calculating t values
+std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere, bool hitOnly)
 {
-	glm::vec4 invDir = d;
+	glm::vec4 invO = o;
+	glm::vec4 invD = d;
 	
 	// If the sphere is non-canonical, we must transform the ray relative to the sphere
-	if (sphere->scl.x != 1 || sphere->scl.y != 1 || sphere->scl.z != 1) { invDir /= (sphere->scl * sphere->scl); }
+	if (sphere->scl.x != 1.f || sphere->scl.y != 1.f || sphere->scl.z != 1.f)
+	{
+		invO = sphere->inverseMatrix * o;
+		invD = sphere->inverseMatrix * d;
+	}
 
 	// Formula:
 	// |d|^2t + 2(d . c)t + |c|^2 - 1 = 0 
 
-	glm::vec4 c = o - sphere->pos;
+	glm::vec4 c = invO - sphere->pos;
 
-	// Get each component in At^2 + 2Bt + C = 0
-	//float A = dot(invDir, invDir);
-	//float B = 2 * dot(invDir, c);
-	//float C = dot(c, c) - 1;
+	float A = dot(invD, invD);
+	float B = dot(invD, c);
+	float C = dot(c, c) - 1.f;
 
-	float A =
-		((d.x * d.x) / (sphere->scl.x * sphere->scl.x)) +
-		((d.y * d.y) / (sphere->scl.y * sphere->scl.y)) +
-		((d.z * d.z) / (sphere->scl.z * sphere->scl.z));
-
-	float B =
-		((2.f * d.x * sphere->pos.x) / (sphere->scl.x * sphere->scl.x)) +
-		((2.f * d.y * sphere->pos.y) / (sphere->scl.y * sphere->scl.y)) +
-		((2.f * d.z * sphere->pos.z) / (sphere->scl.z * sphere->scl.z));
-
-	float C =
-		((sphere->pos.x * sphere->pos.x) / (sphere->scl.x * sphere->scl.x)) +
-		((sphere->pos.y * sphere->pos.y) / (sphere->scl.y * sphere->scl.y)) +
-		((sphere->pos.z * sphere->pos.z) / (sphere->scl.z * sphere->scl.z));
-
-	float discriminant = (B * B) - (4 * A * C);
+	float discriminant = (B * B) - (A * C);
 	Quadratic q;
 	std::unique_ptr<Quadratic> qPtr;
 
 	if (discriminant > 0)
 	{
-		discriminant = sqrt(discriminant);
+		if (!hitOnly)
+		{
+			discriminant = sqrt(discriminant);
 
-		// We need to compare two values
-		float t1 = (-B + discriminant) / A;
-		float t2 = (-B - discriminant) / A;
+			// We need to compare two values
+			float t1 = (-B + discriminant) / A;
+			float t2 = (-B - discriminant) / A;
 
-		q = { A, B, C, t1, t2, sphere };
-		qPtr = std::make_unique<Quadratic>(q);
+			// If the sphere is behind the near plane, ignore
+			if (t1 < 1.f && t2 < 1.f) { return nullptr; }
+
+			q = { A, B, C, t1, t2, sphere };
+
+		}
+		else { q = { A, B, C, 0.f, 0.f, sphere }; }
+
+		return std::make_unique<Quadratic>(q);
 	}
 
 	if (discriminant == 0)
 	{
-		discriminant = sqrt(discriminant);
+		if (!hitOnly)
+		{
+			discriminant = sqrt(discriminant);
 
-		// Doesn't matter which value we compute, compare with the shortest distance t
-		float t1 = (-B + discriminant) / A;
+			// Doesn't matter which value we compute, compare with the shortest distance t
+			float t1 = (-B + discriminant) / A;
 
-		q = { A, B, C, t1, t1, sphere };
-		qPtr = std::make_unique<Quadratic>(q);
+			// If the sphere is behind the near plane, ignore
+			if (t1 < 1.f) { return nullptr; }
+
+			q = { A, B, C, t1, t1, sphere };
+		}
+		else { q = { A, B, C, 0.f, 0.f, sphere }; }
+
+		return std::make_unique<Quadratic>(q);
 	}
 
 	// No collision, return nullptr
@@ -136,7 +141,7 @@ std::unique_ptr<Quadratic> Ray::ShortestCollisionPoint(std::vector<std::shared_p
 	std::unique_ptr<Quadratic> quad;
 	for (auto it = spheres.begin(); it != spheres.end(); ++it)
 	{
-		std::unique_ptr<Quadratic> tempQ = GetCollisionPoint(*it);
+		std::unique_ptr<Quadratic> tempQ = GetCollisionPoint(*it, false);
 
 		// If there is an actual collision
 		if (tempQ)
@@ -148,7 +153,7 @@ std::unique_ptr<Quadratic> Ray::ShortestCollisionPoint(std::vector<std::shared_p
 			}
 			else
 			{
-				// If the new collision is closer to the ray, we reuse this instead
+				// If the new collision is closer to the ray, we use this instead
 				if (tempQ < quad)
 				{
 					quad = std::move(tempQ);
@@ -158,4 +163,16 @@ std::unique_ptr<Quadratic> Ray::ShortestCollisionPoint(std::vector<std::shared_p
 	}
 
 	return quad;
+}
+
+// Returns whether or not there is a collision between a ray and a sphere.
+// Does not compute t values.
+bool Ray::Collides(std::vector<std::shared_ptr<Sphere>> spheres)
+{
+	for (auto it = spheres.begin(); it != spheres.end(); ++it)
+	{
+		std::unique_ptr<Quadratic> hit = GetCollisionPoint(*it, true);
+
+		if (hit) { return true; }
+	}
 }

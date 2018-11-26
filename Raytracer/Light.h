@@ -7,5 +7,5 @@ struct Light
 {
 	std::string name;		// Name of the object
 	glm::vec4 pos;			// Position of the object in 3D space
-	glm::vec4 intensity;	// RGB values of the light's intensity
+	glm::vec3 intensity;	// RGB values of the light's intensity
 };
