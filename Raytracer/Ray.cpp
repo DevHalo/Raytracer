@@ -31,7 +31,7 @@ void Ray::ClampColour(glm::vec3& colour)
 Ray::Ray(glm::vec4 origin, glm::vec4 direction, int _depth)
 {
 	// Starting at hit point t = 0.0001 to prevent numerical errors
-	o = origin + direction * 0.0001f;
+	o = origin + direction;
 	o.w = 1.f;
 	d = direction;
 	d.w = 0.f;
@@ -74,6 +74,7 @@ std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere
 	// Formula:
 	// |d|^2t + 2(d . c)t + |c|^2 - 1 = 0 
 
+	// Drop w components and use cartesian space
 	invO.w = 0.f;
 	invD.w = 0.f;
 
@@ -85,6 +86,7 @@ std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere
 	Quadratic q;
 	std::unique_ptr<Quadratic> qPtr;
 
+	// Two collisions
 	if (discriminant > 0)
 	{
 		discriminant = sqrt(discriminant);
@@ -96,11 +98,12 @@ std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere
 		// If the sphere is behind the near plane, ignore
 		if (t1 < 1.f && t2 < 1.f) { return nullptr; }
 
-		q = { A, B, C, t1, t2, sphere };
+		q = { A, B, C };
 
 		return std::make_unique<Quadratic>(q);
 	}
 
+	// One collision
 	if (discriminant == 0)
 	{
 		discriminant = sqrt(discriminant);
@@ -116,7 +119,7 @@ std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere
 		return std::make_unique<Quadratic>(q);
 	}
 
-	// No collision, return nullptr
+	// If no collision, return nullptr
 	return qPtr;
 }
 
@@ -144,14 +147,12 @@ std::unique_ptr<Quadratic> Ray::ShortestCollisionPoint(std::vector<std::shared_p
 				float mint1 = tempQ->t1 < tempQ->t2 ? tempQ->t1 : tempQ->t2;
 				float mint2 = quad->t1 < quad->t2 ? quad->t1 : quad->t2;
 
-				if (mint1 < mint2) 
-				{
-					quad = std::move(tempQ);
-				}
+				if (mint1 < mint2) { quad = std::move(tempQ); }
 			}
 		}
 	}
 
+	// If no collision, return nullptr
 	return quad;
 }
 
