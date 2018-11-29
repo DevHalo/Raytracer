@@ -12,9 +12,8 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 	// Open file and return null pointer if it doesn't open
 	std::ifstream file(filename);
 
-	if (!file.is_open()) { 
-		return nullptr; 
-	}
+	// If the file failed to open return nullptr
+	if (!file.is_open()) {  return nullptr; }
 
 	// Stores the parameters returned to the caller
 	std::unique_ptr<Parameters> param = std::make_unique<Parameters>();
@@ -182,7 +181,7 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 				{
 					case 1:
 						tempLight->intensity.z = *val;
-						tempLight->pos.x = 1.0f;
+						tempLight->pos.w = 1.f;
 						param->lights.push_back(tempLight);
 						command = "";
 						break;

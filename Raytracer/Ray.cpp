@@ -3,16 +3,8 @@
 #include "FileReader.h"
 #include "glm/glm.hpp"
 
-glm::vec4 o = { 0.f, 0.f, 0.f, 1.f };	// Ray starting point, or eye
-glm::vec4 d = { 0.f, 0.f, 0.f, 0.f };	// Direction of ray, intersects with near plane
-float t = FLT_MAX;							// Scalar for direction
-
-// r(t) = o + dt, t = {0, +inf}
-
-int depth = 0;
-
 // Returns the depth of the current ray being traced
-int Ray::Depth() { return depth; }
+int Ray::Depth() const { return depth; }
 
 // Returns the origin point of the ray
 glm::vec4 Ray::Origin() const { return o; }
@@ -20,11 +12,8 @@ glm::vec4 Ray::Origin() const { return o; }
 // Returns the non-normalized direction of the ray
 glm::vec4 Ray::Direction() const { return d; }
 
-// Sets a new direction vector for the ray
-void Ray::SetDirection(glm::vec4 newDirection) { d = newDirection; }
-
 // Clamps a colour uniformly
-void Ray::ClampColour(glm::vec3 colour)
+void Ray::ClampColour(glm::vec3& colour)
 {
 	if (colour.r <= 1.f && colour.g <= 1.f && colour.b <= 1.f) { return; }
 
@@ -43,7 +32,9 @@ Ray::Ray(glm::vec4 origin, glm::vec4 direction, int _depth)
 {
 	// Starting at hit point t = 0.0001 to prevent numerical errors
 	o = origin + direction * 0.0001f;
+	o.w = 1.f;
 	d = direction;
+	d.w = 0.f;
 
 	depth = _depth;
 }
@@ -51,11 +42,16 @@ Ray::Ray(glm::vec4 origin, glm::vec4 direction, int _depth)
 // Casts a ray from the camera origin to the column and pixel location
 Ray::Ray(std::unique_ptr<Parameters>& params, float width, float height, int col, int row)
 {
+	o = glm::vec4(0.f, 0.f, 0.f, 1.f);
+
 	// Formula is eye + t(P(r,c) - eye) but eye is (0, 0, 0) therefore only P(r,c)
 	// needs to be defined
-	d.x = width * ((2.0f * col / *params->resX) - 1.0f);
-	d.y = height * ((2.0f * row / *params->resY) - 1.0f);
-	d.z = -*params->near;
+	d = glm::vec4(
+		width * ((2.0f * col / *params->resX) - 1.0f),
+		height * ((2.0f * row / *params->resY) - 1.0f), 
+		-*params->near, 
+		0.f
+	);
 
 	depth = 0;
 }
@@ -63,27 +59,27 @@ Ray::Ray(std::unique_ptr<Parameters>& params, float width, float height, int col
 // Returns a struct containing all components of the quadratic as well as
 // the intercepts and whether or not to flip the normal (If the collision point is inside an object)
 // Returns nullptr if no collision is found
-// hitOnly when true parameter will skip calculating t values
-std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere, bool hitOnly)
+std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere)
 {
-	glm::vec4 invO = o;
+	glm::vec4 invO = o - sphere->pos;
 	glm::vec4 invD = d;
-	
+
 	// If the sphere is non-canonical, we must transform the ray relative to the sphere
 	if (sphere->scl.x != 1.f || sphere->scl.y != 1.f || sphere->scl.z != 1.f)
 	{
-		invO = sphere->inverseMatrix * o;
-		invD = sphere->inverseMatrix * d;
+		invO = sphere->inverseMatrix * invO;
+		invD = sphere->inverseMatrix * invD;
 	}
 
 	// Formula:
 	// |d|^2t + 2(d . c)t + |c|^2 - 1 = 0 
 
-	glm::vec4 c = invO - sphere->pos;
+	invO.w = 0.f;
+	invD.w = 0.f;
 
 	float A = dot(invD, invD);
-	float B = dot(invD, c);
-	float C = dot(c, c) - 1.f;
+	float B = dot(invD, invO);
+	float C = dot(invO, invO) - 1.f;
 
 	float discriminant = (B * B) - (A * C);
 	Quadratic q;
@@ -91,40 +87,31 @@ std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere
 
 	if (discriminant > 0)
 	{
-		if (!hitOnly)
-		{
-			discriminant = sqrt(discriminant);
+		discriminant = sqrt(discriminant);
 
-			// We need to compare two values
-			float t1 = (-B + discriminant) / A;
-			float t2 = (-B - discriminant) / A;
+		// We need to compare two values
+		float t1 = (-B + discriminant) / A;
+		float t2 = (-B - discriminant) / A;
 
-			// If the sphere is behind the near plane, ignore
-			if (t1 < 1.f && t2 < 1.f) { return nullptr; }
+		// If the sphere is behind the near plane, ignore
+		if (t1 < 1.f && t2 < 1.f) { return nullptr; }
 
-			q = { A, B, C, t1, t2, sphere };
-
-		}
-		else { q = { A, B, C, 0.f, 0.f, sphere }; }
+		q = { A, B, C, t1, t2, sphere };
 
 		return std::make_unique<Quadratic>(q);
 	}
 
 	if (discriminant == 0)
 	{
-		if (!hitOnly)
-		{
-			discriminant = sqrt(discriminant);
+		discriminant = sqrt(discriminant);
 
-			// Doesn't matter which value we compute, compare with the shortest distance t
-			float t1 = (-B + discriminant) / A;
+		// Doesn't matter which value we compute, compare with the shortest distance t
+		float t1 = (-B + discriminant) / A;
 
-			// If the sphere is behind the near plane, ignore
-			if (t1 < 1.f) { return nullptr; }
+		// If the sphere is behind the near plane, ignore
+		if (t1 < 1.f) { return nullptr; }
 
-			q = { A, B, C, t1, t1, sphere };
-		}
-		else { q = { A, B, C, 0.f, 0.f, sphere }; }
+		q = { A, B, C, t1, t1, sphere };
 
 		return std::make_unique<Quadratic>(q);
 	}
@@ -141,7 +128,7 @@ std::unique_ptr<Quadratic> Ray::ShortestCollisionPoint(std::vector<std::shared_p
 	std::unique_ptr<Quadratic> quad;
 	for (auto it = spheres.begin(); it != spheres.end(); ++it)
 	{
-		std::unique_ptr<Quadratic> tempQ = GetCollisionPoint(*it, false);
+		std::unique_ptr<Quadratic> tempQ = GetCollisionPoint(*it);
 
 		// If there is an actual collision
 		if (tempQ)
@@ -154,7 +141,10 @@ std::unique_ptr<Quadratic> Ray::ShortestCollisionPoint(std::vector<std::shared_p
 			else
 			{
 				// If the new collision is closer to the ray, we use this instead
-				if (tempQ < quad)
+				float mint1 = tempQ->t1 < tempQ->t2 ? tempQ->t1 : tempQ->t2;
+				float mint2 = quad->t1 < quad->t2 ? quad->t1 : quad->t2;
+
+				if (mint1 < mint2) 
 				{
 					quad = std::move(tempQ);
 				}
@@ -171,8 +161,14 @@ bool Ray::Collides(std::vector<std::shared_ptr<Sphere>> spheres)
 {
 	for (auto it = spheres.begin(); it != spheres.end(); ++it)
 	{
-		std::unique_ptr<Quadratic> hit = GetCollisionPoint(*it, true);
+		std::unique_ptr<Quadratic> hit = GetCollisionPoint(*it);
 
-		if (hit) { return true; }
+		if (hit)
+		{
+			// If t1 or t2 is positive, that means the collision is in front of the ray
+			if (hit->t1 >= 0.f || hit->t2 >= 0.f) { return true; }
+		}
 	}
+
+	return false;
 }
