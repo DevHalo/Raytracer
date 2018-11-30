@@ -31,7 +31,7 @@ void Ray::ClampColour(glm::vec3& colour)
 Ray::Ray(glm::vec4 origin, glm::vec4 direction, int _depth)
 {
 	// Starting at hit point t = 0.0001 to prevent numerical errors
-	o = origin + direction;
+	o = origin + direction * 0.0001f;
 	o.w = 1.f;
 	d = direction;
 	d.w = 0.f;
@@ -95,10 +95,9 @@ std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere
 		float t1 = (-B + discriminant) / A;
 		float t2 = (-B - discriminant) / A;
 
-		// If the sphere is behind the near plane, ignore
-		if (t1 < 1.f && t2 < 1.f) { return nullptr; }
-
-		q = { A, B, C };
+		// If the sphere is behind the ray, ignore
+		if (t1 < 0.f && t2 < 0.f) { return nullptr; }
+		q = { A, B, C, t1, t2, sphere };
 
 		return std::make_unique<Quadratic>(q);
 	}
@@ -109,11 +108,10 @@ std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere
 		discriminant = sqrt(discriminant);
 
 		// Doesn't matter which value we compute, compare with the shortest distance t
-		float t1 = (-B + discriminant) / A;
+		float t1 = -B / A;
 
-		// If the sphere is behind the near plane, ignore
-		if (t1 < 1.f) { return nullptr; }
-
+		// If the sphere is behind the ray, ignore
+		if (t1 < 0.f) { return nullptr; }
 		q = { A, B, C, t1, t1, sphere };
 
 		return std::make_unique<Quadratic>(q);

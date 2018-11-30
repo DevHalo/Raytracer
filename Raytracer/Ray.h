@@ -7,7 +7,7 @@ struct Quadratic
 	float A;						// A component of the quadratic formula
 	float B;						// B component of the quadratic formula
 	float C;						// C component of the quadratic formula
-	float t;						// The intercept
+	float t1, t2;						// The intercept
 	std::shared_ptr<Sphere> sphere;	// The sphere involved with the collision
 	bool flip;						// The normal should be flipped if collision is inside the sphere
 };
