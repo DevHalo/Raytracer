@@ -28,7 +28,7 @@ void Ray::ClampColour(glm::vec3& colour)
 }
 
 // Casts a ray with supplied origin and direction
-Ray::Ray(glm::vec4 origin, glm::vec4 direction, int _depth)
+Ray::Ray(glm::vec4& origin, glm::vec4& direction, int _depth)
 {
 	// Starting at hit point t = 0.0001 to prevent numerical errors
 	o = origin + direction * 0.0001f;
@@ -59,7 +59,7 @@ Ray::Ray(std::unique_ptr<Parameters>& params, float width, float height, int col
 // Returns a struct containing all components of the quadratic as well as
 // the intercepts and whether or not to flip the normal (If the collision point is inside an object)
 // Returns nullptr if no collision is found
-std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere)
+std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere>& sphere)
 {
 	glm::vec4 invO = o - sphere->pos;
 	glm::vec4 invD = d;
@@ -124,7 +124,7 @@ std::unique_ptr<Quadratic> Ray::GetCollisionPoint(std::shared_ptr<Sphere> sphere
 // Returns a struct containing all the components of a quadratic of the
 // closest intersection between a set of objects
 // Returns nullptr if no collision is found
-std::unique_ptr<Quadratic> Ray::ShortestCollisionPoint(std::vector<std::shared_ptr<Sphere>> spheres)
+std::unique_ptr<Quadratic> Ray::ShortestCollisionPoint(std::vector<std::shared_ptr<Sphere>>& spheres)
 {
 	std::unique_ptr<Quadratic> quad;
 	for (auto it = spheres.begin(); it != spheres.end(); ++it)
@@ -156,7 +156,7 @@ std::unique_ptr<Quadratic> Ray::ShortestCollisionPoint(std::vector<std::shared_p
 
 // Returns whether or not there is a collision between a ray and a sphere.
 // Does not compute t values.
-bool Ray::Collides(std::vector<std::shared_ptr<Sphere>> spheres)
+bool Ray::Collides(std::vector<std::shared_ptr<Sphere>>& spheres)
 {
 	for (auto it = spheres.begin(); it != spheres.end(); ++it)
 	{
