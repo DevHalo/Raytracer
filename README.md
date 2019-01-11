@@ -7,6 +7,7 @@ Renders to a ppm a scene with the following characteristics:
 * Up to 10 lights
 * Background colour
 * Ambient colour
+* Multithreading support
 
 The algorithm is a very similar but different application of the Phong reflection model (more can be read [here](https://en.wikipedia.org/wiki/Phong_reflection_model)). The number of reflection rays per pixel is no more than 3.
 
@@ -18,9 +19,10 @@ Clone repository and build in debug or release (x86 or x64) using Visual Studio 
 
 ## Usage
 ```
-raytracer.exe <filename>
+raytracer.exe <filename> -multi
 ```
 ```filename``` must be a .txt file, contain the following, and the **parameters are case sensitive**. Order of each parameter does not matter. If a parameter is repeated, the most recent occurence takes precedence:
+```-multi``` Optional. Enables multithreading support and allocates threads relative to the number of hardware threads on your computer.
 ```
 NEAR <n**>
 LEFT <l**>
