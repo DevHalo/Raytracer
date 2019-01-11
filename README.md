@@ -22,7 +22,8 @@ Clone repository and build in debug or release (x86 or x64) using Visual Studio 
 raytracer.exe <filename> -multi
 ```
 ```filename``` must be a .txt file, contain the following, and the **parameters are case sensitive**. Order of each parameter does not matter. If a parameter is repeated, the most recent occurence takes precedence:
-```-multi``` Optional. Enables multithreading support and allocates threads relative to the number of hardware threads on your computer.
+
+```-multi``` Optional. Enables multithreading support and allocates threads relative to the number of hardware threads on your computer. (On my R7 1700 I've noticed gains up to 3 times the performance with 16 threads)
 ```
 NEAR <n**>
 LEFT <l**>
