@@ -1,6 +1,10 @@
 # C++ Raytracer
 A very simple raytracer written in C++ as a project for EECS 3431 (Introduction to 3D Computer Graphics).
 
+<p align="center">
+    <img src="img/splash.png"/>
+</p>
+
 ## Features
 Renders to a ppm a scene with the following characteristics:
 * Up to 15 spherical objects (sphere or ellipsoid)
