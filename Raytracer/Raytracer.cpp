@@ -166,9 +166,9 @@ void CalculateSphereInverses()
 bool Worker_Raytrace(int startCol, int endCol, int startRow, int endRow,
 	std::vector<std::vector<glm::vec3>>& dirtyArray)
 {
-	for (int col = startCol; col <= endCol; ++col)
+	for (int col = startCol; col <= endCol; col++)
 	{
-		for (int row = startRow; row <= endRow; ++row)
+		for (int row = startRow; row <= endRow; row++)
 		{
 			Ray pRay = Ray(params, width, height, col, row);
 			dirtyArray[col][row] = raytrace(pRay);
@@ -255,34 +255,41 @@ int main(const int argc, char* arg[])
 
 		int index = 0;
 		// Iterate through each chunk and assign a thread for it
-		for (int row = 0; row + rowSize < *params->resY; row += rowSize)
+		for (int row = 0; row + rowSize <= *params->resY; row += rowSize)
 		{
-			for (int col = 0; col + colSize < *params->resX; col += colSize)
+			for (int col = 0; col + colSize <= *params->resX; col += colSize)
 			{
 				activeThreads.push_back(std::async(std::launch::async,
 					Worker_Raytrace,
-					col, col + colSize,
-					row, row + rowSize,
+					col, col + colSize - 1,
+					row, row + rowSize - 1,
 					std::ref(dirtyPixels))
 				);
 			}
 
-			// Process any remaining pixels outside the column
-			activeThreads.push_back(std::async(std::launch::async,
-				Worker_Raytrace,
-				*params->resX - colRemainder, *params->resX - 1,
-				row, row + rowSize,
-				std::ref(dirtyPixels))
-			);
+			// Process any remaining pixels inside a square that does not
+			// match the block size
+			if (colRemainder != 0)
+			{
+				activeThreads.push_back(std::async(std::launch::async,
+					Worker_Raytrace,
+					*params->resX - colRemainder, *params->resX - 1,
+					row, row + rowSize - 1,
+					std::ref(dirtyPixels))
+				);
+			}
 		}
 
 		// Process any remaining pixels outside the row
-		activeThreads.push_back(std::async(std::launch::async,
-			Worker_Raytrace,
-			0, *params->resX - 1,
-			*params->resY - rowRemainder, *params->resY - 1,
-			std::ref(dirtyPixels))
-		);
+		if (rowRemainder != 0)
+		{
+			activeThreads.push_back(std::async(std::launch::async,
+				Worker_Raytrace,
+				0, *params->resX - 1,
+				*params->resY - rowRemainder, *params->resY - 1,
+				std::ref(dirtyPixels))
+			);
+		}
 
 		// Run through all threads and make sure they have completed
 		for (auto it = activeThreads.begin(); it != activeThreads.end(); ++it) { (*it).get(); }
