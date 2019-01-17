@@ -16,7 +16,7 @@ Renders to a ppm a scene with the following characteristics:
 The algorithm is a very similar but different application of the Phong reflection model (more can be read [here](https://en.wikipedia.org/wiki/Phong_reflection_model)). The number of reflection rays per pixel is no more than 3.
 
 ## Planned Features
-* None at the moment
+* CUDA accelerated rendering
 
 ## Compilation
 Clone repository and build in debug or release (x86 or x64) using Visual Studio 2017. Compiling in debug mode will also build the test project. Note: Currently the test inputs are copied to the output directory **regardless** of debug/release.
