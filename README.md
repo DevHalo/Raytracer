@@ -1,11 +1,11 @@
 # C++ Raytracer
 A very simple raytracer written in C++ as a final project for EECS 3431 (Introduction to 3D Computer Graphics).
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/9b41b6c978fe4a528eea44251e8c05dd)](https://www.codacy.com/app/DevHalo/Raytracer?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DevHalo/Raytracer&amp;utm_campaign=Badge_Grade)
-
 <p align="center">
     <img src="img/splash.png"/>
 </p>
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/9b41b6c978fe4a528eea44251e8c05dd)](https://www.codacy.com/app/DevHalo/Raytracer?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DevHalo/Raytracer&amp;utm_campaign=Badge_Grade)
 
 ## Features
 Renders to a ppm a scene with the following characteristics:
