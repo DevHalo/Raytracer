@@ -4,22 +4,19 @@
 #include "ppm.h"
 #include "include/glm/glm.hpp"
 #include "include/glm/gtc/matrix_transform.hpp"
-#include <ctime>
 #include <future>
 #include <iostream>
 
 using namespace std;
 
-unique_ptr<Parameters> params;
-const int MAX_DEPTH = 4;
-float height, width;
+unique_ptr<Parameters> params;		// Global reference to parameters
+const int MAX_DEPTH = 4;			// Max recursive ray trace operations per ray
+float height, width;				// Height and width of the camera space
 
 glm::vec3 raytrace(Ray& ray)
 {
 	// If the ray has bounced more than 3 times, return black
 	if (ray.Depth() > MAX_DEPTH) { return { 0.f, 0.f, 0.f }; }
-
-	glm::vec3 cShadow{}, cRefl{};
 
 	// Calculate the closest sphere that hits the ray
 	std::unique_ptr<Quadratic> quad = ray.ShortestCollisionPoint(params->spheres);
@@ -27,43 +24,22 @@ glm::vec3 raytrace(Ray& ray)
 	// If a ray hits a sphere, compute lighting
 	if (quad)
 	{
-		// Ambient Component
-		glm::vec3 cAmbient = quad->sphere->k_a * *params->ambient * quad->sphere->colour;
-		
-		float t;
-		glm::vec4 N, intersect, reflRayDir;
+		glm::vec4 N, intersect;
+		glm::vec3 colour{};
 		
 		// If the sphere is inside the near plane, flip normal
 		// To calculate normal we must calculate the gradient which is
 		// p/r^2 where p is the point on the ellipsoid and r is radius in x,y,z
-		if (quad->flip)
-		{
-			t = glm::max(quad->t1, quad->t2);
-			intersect = ray.Direction() * t;
-			intersect.w = 1.f;
+		intersect = ray.Direction() * (quad->flip ? 
+			glm::max(quad->t1, quad->t2) : 	
+			glm::min(quad->t1, quad->t2)	
+		);
+		intersect.w = 1.f;
 
-			N = intersect - quad->sphere->pos;
-			N = N / (quad->sphere->scl * quad->sphere->scl);
-			N.w = 0.f;
-			N = normalize(-N);
-		}
-		else
-		{
-			t = quad->t1 < quad->t2 ? quad->t1 : quad->t2;
-			intersect = ray.Direction() * t;
-			intersect.w = 1.f;
-			
-			N = intersect - quad->sphere->pos;
-			N = N / (quad->sphere->scl * quad->sphere->scl);
-			N.w = 0.f;
-			N = normalize(N);
-			
-			/*
-			N = transpose(quad->sphere->inverseMatrix) * (intersect - quad->sphere->pos);
-			N.w = 0.f;
-			N = normalize(N);
-			*/
-		}
+		N = intersect - quad->sphere->pos;
+		N = N / (quad->sphere->scl * quad->sphere->scl);
+		N.w = 0.f;
+		N = normalize(quad->flip ? -N : N);
 
 		// Calculate Phong illumination by iterating through all lights in the scene
 		for (auto it = params->lights.begin(); it != params->lights.end(); ++it)
@@ -92,13 +68,13 @@ glm::vec3 raytrace(Ray& ray)
 				// Compute diffuse component
 				if (diffuseDot > 0.f)
 				{
-					cShadow += quad->sphere->k_diff * (*it)->intensity * diffuseDot * quad->sphere->colour;
+					colour += quad->sphere->k_diff * (*it)->intensity * diffuseDot * quad->sphere->colour;
 				}
 
 				// Compute specular component
 				if (specularDot > 0.f)
 				{
-					cShadow += quad->sphere->k_spec * (*it)->intensity * pow(specularDot, quad->sphere->n);
+					colour += quad->sphere->k_spec * (*it)->intensity * pow(specularDot, quad->sphere->n);
 				}
 			}
 		}
@@ -106,23 +82,18 @@ glm::vec3 raytrace(Ray& ray)
 		// If the reflective constant is 0, don't bother tracing reflections
 		if (quad->sphere->k_refl != 0.f)
 		{
-			// Calculate reflected ray
-			reflRayDir = -2.f * dot(N, ray.Direction()) * N + ray.Direction();
-			Ray reflRay = Ray(intersect, reflRayDir, ray.Depth() + 1);
+			// Generate reflected ray
+			auto reflRayDir = -2.f * dot(N, ray.Direction()) * N + ray.Direction();
+			Ray reflRay = Ray( intersect, reflRayDir, ray.Depth() + 1);
 
 			// Recursively raytrace
-			cRefl = raytrace(reflRay) * quad->sphere->k_refl;
+			colour += raytrace(reflRay) * quad->sphere->k_refl;
 		}
-
-		// Sum up each component
-		glm::vec3 cTotal = cAmbient + cShadow + cRefl;
-
-		// Clamp the total if the values are over 1.0f
-		return cTotal;
+	
+		return (quad->sphere->k_a * *params->ambient * quad->sphere->colour) + colour;
 	}
 		
-	// No collision, return background colour
-	// If reflected ray, return black
+	// No collision, return background colour. If reflected ray, return black
 	return ray.Depth() > 0 ? glm::vec3(0.f, 0.f, 0.f) : *params->back;
 }
 
@@ -130,29 +101,22 @@ glm::vec3 raytrace(Ray& ray)
 // sphere-line intersections
 void CalculateSphereInverses()
 {
+	// Identity matrix
+	const glm::mat4 identity = glm::mat4(1.f);
+
 	for (auto it = params->spheres.begin(); it != params->spheres.end(); ++it)
 	{
-		// Identity matrix
-		glm::mat4 identity = glm::mat4(1.f);
-
 		// If the sphere is not canonical, we can pre-compute the transformation
 		// matrix to reduce calculations per pixel for sphere-line intersections
 		if ((*it)->scl.x != 1.f || (*it)->scl.y != 1.f || (*it)->scl.z != 1.f)
 		{
-			// Translation matrix
-			glm::mat4 transform = translate(identity, glm::vec3((*it)->pos));
-
-			// Scale matrix
-			glm::mat4 scale = glm::scale(identity, glm::vec3((*it)->scl));
-
 			// Transformation matrix M = Translation * Rotation * Scale
-			(*it)->transformMatrix = transform * scale;
+			(*it)->transformMatrix = 
+				translate(identity, glm::vec3((*it)->pos)) * 
+				scale(identity, glm::vec3((*it)->scl));
 
 			// Invert the transformation matrix
 			(*it)->inverseMatrix = inverse((*it)->transformMatrix);
-
-			// Adjust position of sphere with the transformation matrix
-			//(*it)->pos = (*it)->inverseMatrix * (*it)->pos;
 		}
 		else
 		{
@@ -163,15 +127,21 @@ void CalculateSphereInverses()
 	}
 }
 
-bool Worker_Raytrace(int startCol, int endCol, int startRow, int endRow,
-	std::vector<std::vector<glm::vec3>>& dirtyArray)
+bool WorkerRaytrace(int startRow, int endRow, std::vector<unsigned char>& pixels)
 {
-	for (int col = startCol; col <= endCol; col++)
+	int scaler = (*params->resY - 1) * *params->resX;
+	for (int row = startRow; row < endRow; row++)
 	{
-		for (int row = startRow; row <= endRow; row++)
+		int index = (scaler - row * *params->resX) * 3;
+		for (int col = 0; col < *params->resX; col++)
 		{
 			Ray pRay = Ray(params, width, height, col, row);
-			dirtyArray[col][row] = raytrace(pRay);
+
+			glm::vec3 objectColour = raytrace(pRay);
+			pixels[index] = glm::min(255.f, objectColour.r * 255.f);
+			pixels[index + 1] = glm::min(255.f, objectColour.g * 255.f);
+			pixels[index + 2] = glm::min(255.f, objectColour.b * 255.f);
+			index += 3;
 		}
 	}
 
@@ -191,8 +161,7 @@ int main(const int argc, char* arg[])
 
 	cout << "Reading file... ";
 
-	FileReader reader;
-	params = reader.ReadFile(arg[1]);
+	params = FileReader::ReadFile(arg[1]);
 
 	// If the file was not successfully read
 	if (params == nullptr)
@@ -202,6 +171,7 @@ int main(const int argc, char* arg[])
 	}
 
 	cout << "Done.\n";
+	cout << "NOTE: Parameters LEFT, RIGHT, TOP, and BOTTOM are deprecated. They have no effect on the result\n";
 
 	bool runAsync = false;
 	unsigned int threads = 0;
@@ -226,91 +196,48 @@ int main(const int argc, char* arg[])
 	cout << "Done.\n";
 
 	// Store our array of pixels row, column
-	std::vector<unsigned char> pixels =
-		std::vector<unsigned char>(*params->resX * *params->resY * 3);
-
-	width = (*params->right - *params->left) / 2.f;
-	height = (*params->top - *params->bottom) / 2.f;
+	auto pixels = std::vector<unsigned char>();
+	pixels.reserve(*params->resX * *params->resY * 3);
+	
+	width = ((float(*params->resX) / *params->resY) + 1.f) / 2.f;	
+	height = ((float(*params->resY) / *params->resX) + 1.f) / 2.f;
 
 	cout << "Raytracing " << *params->resX << " x " << *params->resY << " pixels...";
-	int index = 0;
 
-	// Timing variables
+	// Used for timing
 	auto start = std::chrono::high_resolution_clock::now();
 
 	if (runAsync)
 	{
-		// Allocate 2d array of vectors. Does not require a mutex because
-		// two threads will never write to the same memory location/index
-		std::vector<std::vector<glm::vec3>> dirtyPixels;
-		dirtyPixels.resize(*params->resX, std::vector<glm::vec3>(*params->resY));
-
 		auto activeThreads = std::vector<std::future<bool>>();
 
 		// Thread count is divided by 2 to divide the image into equal parts
-		int rowSize = *params->resY / (threads / 2);
-		int colSize = *params->resX / (threads / 2);
-		int rowRemainder = *params->resY % (threads / 2);
-		int colRemainder = *params->resX % (threads / 2);
+		int rowSize = *params->resY / threads;
+		int rowRemainder = *params->resY - (*params->resY % threads);
 
-		int index = 0;
 		// Iterate through each chunk and assign a thread for it
-		for (int row = 0; row + rowSize <= *params->resY; row += rowSize)
-		{
-			for (int col = 0; col + colSize <= *params->resX; col += colSize)
-			{
-				activeThreads.push_back(std::async(std::launch::async,
-					Worker_Raytrace,
-					col, col + colSize - 1,
-					row, row + rowSize - 1,
-					std::ref(dirtyPixels))
-				);
-			}
-
-			// Process any remaining pixels inside a square that does not
-			// match the block size
-			if (colRemainder != 0)
-			{
-				activeThreads.push_back(std::async(std::launch::async,
-					Worker_Raytrace,
-					*params->resX - colRemainder, *params->resX - 1,
-					row, row + rowSize - 1,
-					std::ref(dirtyPixels))
-				);
-			}
-		}
-
-		// Process any remaining pixels outside the row
-		if (rowRemainder != 0)
+		for (int row = 0; row + rowSize <= rowRemainder; row += rowSize)
 		{
 			activeThreads.push_back(std::async(std::launch::async,
-				Worker_Raytrace,
-				0, *params->resX - 1,
-				*params->resY - rowRemainder, *params->resY - 1,
-				std::ref(dirtyPixels))
+				WorkerRaytrace, row, row + rowSize, std::ref(pixels))
+			);
+		}
+
+		// Process any remaining pixels
+		if (rowRemainder != *params->resY)
+		{
+			activeThreads.push_back(std::async(std::launch::async,
+				WorkerRaytrace, rowRemainder, *params->resY - 1, std::ref(pixels))
 			);
 		}
 
 		// Run through all threads and make sure they have completed
 		for (auto it = activeThreads.begin(); it != activeThreads.end(); ++it) { (*it).get(); }
-
-		index = 0;
-		// Copy each vector to the output array of unsigned chars
-		for (int row = *params->resY - 1; row >= 0; row--)
-		{
-			for (int col = 0; col < *params->resX; col++)
-			{
-				glm::vec3 result = dirtyPixels[col][row];
-				pixels[index] = glm::min(255.f, result.r * 255.f);
-				pixels[index + 1] = glm::min(255.f, result.g * 255.f);
-				pixels[index + 2] = glm::min(255.f, result.b * 255.f);
-				index += 3;
-			}
-		}
 	}
 	else
 	{
 		// Sequential raytracing loop
+		int index = 0;
 		for (int row = *params->resY - 1; row >= 0; row--)
 		{
 			for (int col = 0; col < *params->resX; col++)
@@ -323,12 +250,12 @@ int main(const int argc, char* arg[])
 				pixels[index + 1] = glm::min(255.f, objectColour.g * 255.f);
 				pixels[index + 2] = glm::min(255.f, objectColour.b * 255.f);
 				index += 3;
-
 			}
 		}
 	}
 
-	auto elapsed = std::chrono::high_resolution_clock::now() - start;
+	long elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::high_resolution_clock::now() - start).count();
 
 	cout << " Done.\n";
 
@@ -336,10 +263,7 @@ int main(const int argc, char* arg[])
 	const char* out = params->output.c_str();
 	ppm::save_imageP6(*params->resX, *params->resY, out, &pixels[0]);
 
-	cout << " Done.\nRaytracing finished.\n";
-
-	cout << "Rendering Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() 
-		<< " milliseconds" << endl;
+	cout << " Done.\nRaytracing finished.\nRendering Time: " << elapsed << "milliseconds\n";
 
 	return 0;
 }

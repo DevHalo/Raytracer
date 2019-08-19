@@ -23,7 +23,7 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 	std::shared_ptr<Sphere> tempSphere;	// Temp storage for a sphere object
 	std::shared_ptr<Light> tempLight;	// Temp storage for a light object
 
-	// While we still have 
+	// While we still have input
 	while (file >> buffer)
 	{
 		// Attempt to cast the buffer to a float
@@ -220,7 +220,7 @@ std::unique_ptr<Parameters> FileReader::ReadFile(std::string filename)
 }
 
 // Method to convert a float into a shared pointer
-std::shared_ptr<float> FileReader::ConvertToFloat(std::string strVal) const
+std::shared_ptr<float> FileReader::ConvertToFloat(std::string strVal)
 {
 	// If the supplied string is not a float, return a null pointer instead
 	try { return std::make_shared<float>(std::stof(strVal)); }
