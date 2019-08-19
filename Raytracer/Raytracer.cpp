@@ -191,8 +191,7 @@ int main(const int argc, char* arg[])
 
 	cout << "Reading file... ";
 
-	FileReader reader;
-	params = reader.ReadFile(arg[1]);
+	params = FileReader::ReadFile(arg[1]);
 
 	// If the file was not successfully read
 	if (params == nullptr)

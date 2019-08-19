@@ -18,7 +18,7 @@ struct Parameters
 class FileReader
 {
 public:
-	std::unique_ptr<Parameters> ReadFile(std::string filename);
+	static std::unique_ptr<Parameters> ReadFile(std::string filename);
 private:
-	std::shared_ptr<float> ConvertToFloat(std::string strVal) const;
+	static std::shared_ptr<float> ConvertToFloat(std::string strVal);
 };
