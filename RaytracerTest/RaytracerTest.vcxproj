@@ -31,7 +31,7 @@
     <ProjectGuid>{35150B1D-B19D-475F-A21D-F5DA35132540}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>RaytracerTest</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
