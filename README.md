@@ -1,5 +1,5 @@
 # C++ Raytracer
-A very simple raytracer written in C++ as a project for EECS 3431 (Introduction to 3D Computer Graphics).
+A very simple raytracer written in C++ as a final project for EECS 3431 (Introduction to 3D Computer Graphics).
 
 <p align="center">
     <img src="img/splash.png"/>
@@ -17,6 +17,14 @@ The algorithm is a very similar but different application of the Phong reflectio
 
 ## Planned Features
 * CUDA accelerated rendering
+* Render to a more web friendly image format
+* More shapes
+* More unit tests
+
+## Changelog (2019-08-19)
+* Improved multithreading performance (~25%)
+* Cleaned up redundant code
+* View fustrum parameters were deprecated. Aspect ratio is automatically calculated
 
 ## Compilation
 Clone repository and build in debug or release (x86 or x64) using Visual Studio 2017. Compiling in debug mode will also build the test project. Note: Currently the test inputs are copied to the output directory **regardless** of debug/release.
@@ -27,13 +35,13 @@ raytracer.exe <filename> -multi
 ```
 ```filename``` must be a .txt file, contain the following, and the **parameters are case sensitive**. Order of each parameter does not matter. If a parameter is repeated, the most recent occurence takes precedence:
 
-```-multi``` Optional. Enables multithreading support and allocates threads relative to the number of hardware threads on your computer. (On my R7 1700 I've noticed gains up to 3 times the performance with 16 threads)
+```-multi``` Optional. Enables multithreading support and allocates threads relative to the number of hardware threads on your computer. Average performance gains of between 3x-5x. Scales best for larger images.
 ```
 NEAR <n**>
-LEFT <l**>
-RIGHT <r**>
-BOTTOM <b**>
-TOP <t**>
+~~LEFT <l**>~~
+~~RIGHT <r**>~~
+~~BOTTOM <b**>~~
+~~TOP <t**>~~
 
 RES <x*> <y*>
 
@@ -53,7 +61,7 @@ Examples can be seen in ```RaytracerTest/input/```
 ### Explanation for parameters
 The near plane is defined as:
 * The absolute distance along the negative z-axis ```n```
-* The view frustrum ```left, right, top, bottom```
+* ~~The view frustrum ```left, right, top, bottom```~~
 * The render resolution in ```x columns, y rows```
 
 The sphere has the following parameters (In order):
@@ -79,11 +87,13 @@ The name of the output file ```name```
 ```names``` are limited to 20 characters, with no spaces. All parameters are separated by spaces. There are no brackets in the input file (they are to clarify what each type is each parameter).
 
 ### The application will not render if:
-* You do not specify a near plane, resolution, or frustrum
+* You do not specify a near plane, resolution, or ~~frustrum~~
 * You do not specify a background colour
 * You do not specify an ambient light intensity
 
 The executable is compiled for Windows with Visual C++17 as specified in the requirements of the assignment.
+
+** The Windows target platform was changed to 10.0.18362.0 and may or may not work with VS 17**
 
 ## Licenses
 The project itself is licensed under GPLv3 and makes use of:
