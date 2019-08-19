@@ -1,5 +1,5 @@
 # C++ Raytracer
-A very simple raytracer written in C++ as a final project for EECS 3431 (Introduction to 3D Computer Graphics).
+A very simple raytracer written in C++ as a final project for an introductory 3D graphics course.
 
 <p align="center">
     <img src="img/splash.png"/>
